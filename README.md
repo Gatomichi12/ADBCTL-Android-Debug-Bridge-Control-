@@ -1,4 +1,4 @@
-# ADBCTL-Android-Debug-Bridge-Control-
+# ADBCTL (Android Debug Bridge Control)
 ADBCTL 
 
 Este lanzamiento lo hago porque hay algunas personas como yo que no saben usar ADB, asi que aqui está ADBCTL.
