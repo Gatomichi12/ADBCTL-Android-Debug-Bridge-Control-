@@ -4,13 +4,14 @@ Está hecho con ayuda de DeepSeek porque realmente no sé mucho sobre programar.
 
 Hecho para Linux aún.
 
-<img width="510" height="728" alt="Captura de pantalla de 2025-10-16 17-40-02" src="https://github.com/user-attachments/assets/b1ca3b50-68b1-45d8-8e86-345d5e2d3159" />
+<img width="510" height="659" alt="Captura de pantalla de 2025-10-17 15-11-48" src="https://github.com/user-attachments/assets/0fc3909a-e506-46e6-97a2-9cef98b31547" />
+
 
 Compatible con Android 5.0+
 
-Lo que hace básicamente es algunos comandos de ADB bastante útiles, como por ejemplo desinstalar e instalar apps, tomar capturas de pantalla, etc.
+Lo que hace básicamente es algunos comandos de ADB bastante útiles, como por ejemplo desinstalar e instalar apps, tomar capturas de pantalla, etc. Todo esto mediante un cable USB.
 
-Todavía necesito ver si este tiene bugs, intentaré actualizarlo e implementar cada vez más utilidades. Sé que hay muchas herramientas parecidas, pero quisiera dar algún aporte.
+Esta herramienta tiende a tener bugs, si me doy cuenta de uno, lo arreglaré al instante.
 
 Gracias por apoyar mi proyecto
 
