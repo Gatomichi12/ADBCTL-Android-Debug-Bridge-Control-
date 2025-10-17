@@ -21,10 +21,11 @@ Primero descarga adbctl desde [releases](https://github.com/Gatomichi12/ADBCTL-A
 
 Luego:
 
-1. Abre terminal en la carpeta donde lo descargaste 
-2. Ejecuta: `chmod +x adbctl` (lo hace ejecutable)
-3. Ejecuta: `sudo mv adbctl /bin/` (lo instala para que lo puedas usar)
-4. Ejecuta: adbctl
+1. Abre terminal en la carpeta donde lo descargaste
+2. Ejecuta: `unzip (El archivo)` pero no pongas literalmente "(El archivo)" xd (Descomprime el .zip)
+3. Ejecuta: `chmod +x adbctl` (lo hace ejecutable)
+4. Ejecuta: `sudo mv adbctl /bin/` (lo instala para que lo puedas usar)
+5. Ejecuta: adbctl
 
 ¡Listo! Ya está listo para usar.
 
