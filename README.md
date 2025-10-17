@@ -16,7 +16,7 @@ Esta herramienta tiende a tener bugs, si me doy cuenta de uno, lo arreglaré al 
 Gracias por apoyar mi proyecto
 
 # Instalacion
-Primero descarga adbctl desde releases
+Primero descarga adbctl desde https://github.com/Gatomichi12/ADBCTL-Android-Debug-Bridge-Control-/releases
 
 Ve a la carpeta donde lo descargaste
 
