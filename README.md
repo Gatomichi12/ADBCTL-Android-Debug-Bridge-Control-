@@ -2,7 +2,7 @@
 Este lanzamiento lo hago porque hay algunas personas como yo que no saben usar ADB, así que aquí está ADBCTL. 
 Está hecho con ayuda de DeepSeek porque realmente no sé mucho sobre programar.
 
-Hecho para Linux aún.
+Funciona en Linux, Windows y macOS
 
 <img width="510" height="659" alt="Captura de pantalla de 2025-10-17 15-11-48" src="https://github.com/user-attachments/assets/0fc3909a-e506-46e6-97a2-9cef98b31547" />
 
@@ -16,7 +16,7 @@ Esta herramienta puede tener algunos bugs. Si detecto alguno, lo solucionaré in
 
 ¡Gracias por apoyar mi proyecto!
 
-# Instalacion
+# Instalacion: Linux
 Primero descarga adbctl desde [releases](https://github.com/Gatomichi12/ADBCTL-Android-Debug-Bridge-Control-/releases)
 
 Luego:
