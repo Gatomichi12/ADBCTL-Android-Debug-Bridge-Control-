@@ -7,23 +7,25 @@ Hecho para Linux aún.
 <img width="510" height="659" alt="Captura de pantalla de 2025-10-17 15-11-48" src="https://github.com/user-attachments/assets/0fc3909a-e506-46e6-97a2-9cef98b31547" />
 
 
-Compatible con Android 5.0+
 
-Lo que hace básicamente es algunos comandos de ADB bastante útiles, como por ejemplo desinstalar e instalar apps, tomar capturas de pantalla, etc. Todo esto mediante un cable USB.
+**Compatibilidad:** Android 5.0 y superior
 
-Esta herramienta tiende a tener bugs, si me doy cuenta de uno, lo arreglaré al instante.
+Básicamente, ejecuta algunos comandos de ADB muy útiles, como por ejemplo desinstalar e instalar aplicaciones, tomar capturas de pantalla, etc. Todo esto mediante un cable USB.
 
-Gracias por apoyar mi proyecto
+Esta herramienta puede tener algunos bugs. Si detecto alguno, lo solucionaré inmediatamente.
+
+¡Gracias por apoyar mi proyecto!
 
 # Instalacion
 Primero descarga adbctl desde [releases](https://github.com/Gatomichi12/ADBCTL-Android-Debug-Bridge-Control-/releases)
 
-Ve a la carpeta donde lo descargaste
+Luego:
 
-Luego, si no es ejecutable hazlo ejecutable con `chmod +x adbctl`
+1. Abre terminal en la carpeta donde lo descargaste 
+2. Ejecuta: `chmod +x adbctl` (lo hace ejecutable)
+3. Ejecuta: `sudo mv adbctl /bin/` (lo instala para que lo puedas usar)
+4. Ejecuta: adbctl
 
-Despues muevelo hasta la carpeta /bin con `sudo mv adbctl /bin/`
+¡Listo! Ya está listo para usar.
 
-¡Eso es todo! Ya lo puedes usar. Este programa viene sin garantia, no me veré culpable por lo que le pase a tu telefono mientras lo usas :P
-
-PD: Es totalmente Open Source
+**Disclaimer:** ADBCTL es software de código abierto proporcionado sin garantías. Eres responsable de cualquier cambio que realices en tu dispositivo.
