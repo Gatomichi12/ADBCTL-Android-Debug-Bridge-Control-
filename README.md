@@ -4,29 +4,33 @@ Está hecho con ayuda de DeepSeek porque realmente no sé mucho sobre programar.
 
 Funciona en Linux, Windows y macOS
 
-<img width="510" height="659" alt="Captura de pantalla de 2025-10-17 15-11-48" src="https://github.com/user-attachments/assets/0fc3909a-e506-46e6-97a2-9cef98b31547" />
 
+<img width="510" height="728" alt="Captura de pantalla de 2025-10-19 14-55-36" src="https://github.com/user-attachments/assets/90bd69e7-95d7-421a-9238-2bc1dc5df9ea" />
 
 
 **Compatibilidad:** Android 5.0 y superior
 
 Básicamente, ejecuta algunos comandos de ADB muy útiles, como por ejemplo desinstalar e instalar aplicaciones, tomar capturas de pantalla, etc. Todo esto mediante un cable USB.
 
-Esta herramienta puede tener algunos bugs. Si detecto alguno, lo solucionaré inmediatamente.
+Esta herramienta puede tener algunos errores, no todo puede funcionar. Intentaré arreglar cualquier error en cuanto me de cuenta de que existe.
 
 ¡Gracias por apoyar mi proyecto!
 
-# Instalacion: Linux
+# Instalacion:
 Primero descarga adbctl desde [releases](https://github.com/Gatomichi12/ADBCTL-Android-Debug-Bridge-Control-/releases)
 
-Luego:
+Linux:
 
 1. Abre terminal en la carpeta donde lo descargaste
-2. Ejecuta: `unzip (El archivo)` pero no pongas literalmente "(El archivo)" xd (Descomprime el .zip)
+2. Ejecuta: `unzip adbctl-linux-v0.2.0-beta.zip (Descomprime el .zip)
 3. Ejecuta: `chmod +x adbctl` (lo hace ejecutable)
 4. Ejecuta: `sudo mv adbctl /bin/` (lo instala para que lo puedas usar)
 5. Ejecuta: adbctl
 
-¡Listo! Ya está listo para usar.
+macOS: ¯|_(ツ)_|¯
+
+Windows: ¯|_(ツ)_|¯
+
+¡Listo! Ya está lo puedes para usar.
 
 **Disclaimer:** ADBCTL es software de código abierto proporcionado sin garantías. Eres responsable de cualquier cambio que realices en tu dispositivo.
