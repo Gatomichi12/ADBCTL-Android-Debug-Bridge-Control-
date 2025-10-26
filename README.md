@@ -22,14 +22,14 @@ Primero descarga adbctl desde [releases](https://github.com/Gatomichi12/ADBCTL-A
 Linux:
 
 1. Abre una terminal en la carpeta donde lo descargaste.
-2. Ejecuta: `unzip adbctl-linux-v0.2.0-beta.zip (Descomprime el .zip)
+2. Ejecuta: `unzip adbctl-linux-v0.2.0-beta.zip` (Descomprime el .zip)
 3. Ejecuta: `chmod +x adbctl` (lo hace ejecutable)
 4. Ejecuta: `sudo mv adbctl /bin/` (lo instala para que lo puedas usar)
 5. Ejecuta: adbctl
 
 macOS: ¯|_(ツ)_|¯
 
-Windows: ¯|_(ツ)_|¯
+Windows: ¯|_(ツ)_|¯ Solo sé que necesitas Git Bash.
 
 ¡Listo! Ya está lo puedes para usar.
 
