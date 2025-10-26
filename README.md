@@ -29,7 +29,7 @@ Linux:
 
 macOS: ¯|_(ツ)_|¯
 
-Windows: ¯|_(ツ)_|¯ Solo sé que necesitas Git Bash.
+Windows: ¯|_(ツ)_|¯  Solo sé que necesitas Git Bash.
 
 ¡Listo! Ya está lo puedes para usar.
 
