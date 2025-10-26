@@ -1,0 +1,798 @@
+#!/bin/bash
+
+# ADBCTL - Multiplataforma (Linux, macOS, Windows con WSL/Git Bash)
+# Versión 2.0 - Compatible con Linux, macOS y Windows
+
+# Configuración de colores
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+PURPLE='\033[0;35m'
+NC='\033[0m' # No Color
+
+# Detectar sistema operativo
+detect_os() {
+    case "$(uname -s)" in
+        Darwin*)    OS="macOS" ;;
+        Linux*)     OS="Linux" ;;
+        CYGWIN*|MINGW*|MSYS*) OS="Windows" ;;
+        *)          OS="UNKNOWN" ;;
+    esac
+    echo "$OS"
+}
+
+OS=$(detect_os)
+
+# Configuración según SO
+case "$OS" in
+    "Linux")
+        SCREENSHOT_DIR="/storage/emulated/0/Screenshots"
+        SCREENRECORD_DIR="/storage/emulated/0/Recordings"
+        ;;
+    "macOS")
+        SCREENSHOT_DIR="/storage/emulated/0/Screenshots"
+        SCREENRECORD_DIR="/storage/emulated/0/Recordings"
+        ;;
+    "Windows")
+        SCREENSHOT_DIR="/storage/emulated/0/Screenshots"
+        SCREENRECORD_DIR="/storage/emulated/0/Recordings"
+        ;;
+    *)
+        SCREENSHOT_DIR="/storage/emulated/0/Screenshots"
+        SCREENRECORD_DIR="/storage/emulated/0/Recordings"
+        ;;
+esac
+
+# Variables globales
+DEVICE_IP=""
+LOG_FILE="adbctl_$(date +%Y%m%d_%H%M%S).log"
+
+# Función para loggear
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+error() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: $1" >> "$LOG_FILE"
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+# Función para verificar ADB
+check_adb() {
+    if ! command -v adb &> /dev/null; then
+        error "ADB no encontrado en el sistema."
+        echo ""
+        echo -e "${CYAN}=== INSTALACIÓN DE ADB ===${NC}"
+        case "$OS" in
+            "Linux")
+                echo "  Ubuntu/Debian: sudo apt install android-tools-adb"
+                echo "  Fedora: sudo dnf install android-tools"
+                echo "  Arch: sudo pacman -S android-tools"
+                echo "  O descarga Android Studio: https://developer.android.com/studio"
+                ;;
+            "macOS")
+                echo "  Con Homebrew: brew install android-platform-tools"
+                echo "  O descarga Android Studio: https://developer.android.com/studio"
+                ;;
+            "Windows")
+                echo "  1. Descarga Platform Tools: https://developer.android.com/studio/releases/platform-tools"
+                echo "  2. Extrae y añade la carpeta al PATH del sistema"
+                echo "  3. O instala Android Studio"
+                echo "  4. O usa Chocolatey: choco install adb"
+                ;;
+        esac
+        echo ""
+        echo -e "${YELLOW}Reinicia el terminal después de instalar ADB.${NC}"
+        exit 1
+    fi
+    
+    devices=$(adb devices | grep -v "List of devices" | grep "device$" | wc -l)
+    if [ "$devices" -eq 0 ]; then
+        error "No hay dispositivos conectados. Verifica:"
+        echo "1. Cable USB conectado"
+        echo "2. Depuración USB activada"
+        echo "3. Aprobación de RSA key en el dispositivo"
+        echo "4. Controladores instalados (Windows)"
+        echo "5. Modo de transferencia de archivos activado"
+        return 1
+    fi
+    log "Dispositivo ADB conectado correctamente"
+    return 0
+}
+
+# Función MEJORADA para capturas de pantalla - GUARDA EN TELÉFONO
+screenshot() {
+    local filename="$1"
+    local attempt=1
+    local max_attempts=3
+    
+    # Crear directorio de screenshots si no existe
+    adb shell mkdir -p "$SCREENSHOT_DIR" 2>/dev/null
+    
+    while [ $attempt -le $max_attempts ]; do
+        log "Intentando captura de pantalla (intento $attempt)..."
+        
+        # Capturar pantalla directamente en el teléfono
+        if adb shell screencap -p "$filename" 2>/dev/null; then
+            sleep 1
+            # Verificar que el archivo se creó
+            if adb shell "[ -f \"$filename\" ]" 2>/dev/null; then
+                log "Captura exitosa guardada en: $filename"
+                return 0
+            fi
+        fi
+        
+        attempt=$((attempt + 1))
+        sleep 1
+    done
+    
+    error "No se pudo capturar la pantalla después de $max_attempts intentos"
+    return 1
+}
+
+# =============================================
+# FUNCIONES: OPTIMIZACIÓN Y RESOLUCIÓN
+# =============================================
+
+# Función para optimización del dispositivo
+device_optimization() {
+    echo -e "${CYAN}=== OPTIMIZACIÓN DEL DISPOSITIVO ===${NC}"
+    echo "1. Limpiar cache de todas las apps"
+    echo "2. Forzar detención de apps en segundo plano"
+    echo "3. Limpiar archivos temporales"
+    echo "4. Optimizar base de datos"
+    echo "5. Estado actual de memoria"
+    echo "6. Volver al menú principal"
+    
+    read -p "Selecciona opción: " opt_option
+    
+    case $opt_option in
+        1)
+            log "Limpiando cache de todas las aplicaciones..."
+            adb shell pm list packages -3 | sed 's/package://g' | while read app; do
+                adb shell pm clear "$app" 2>/dev/null | grep -v "Failed" && echo "Cache limpiado: $app"
+            done
+            log "Limpieza de cache completada"
+            ;;
+        2)
+            log "Forzando detención de apps en segundo plano..."
+            adb shell "pm list packages -3" | sed 's/package://g' | while read app; do
+                adb shell am force-stop "$app" 2>/dev/null
+            done
+            log "Apps en segundo plano detenidas"
+            ;;
+        3)
+            log "Limpiando archivos temporales..."
+            # Limpiar directorios temporales comunes
+            adb shell rm -rf /storage/emulated/0/Download/temp* 2>/dev/null
+            adb shell rm -rf /storage/emulated/0/Download/*.tmp 2>/dev/null
+            adb shell rm -rf /storage/emulated/0/.temp* 2>/dev/null
+            log "Archivos temporales limpiados"
+            ;;
+        4)
+            log "Optimizando bases de datos..."
+            adb shell find /data/data -name "*.db" -exec sqlite3 {} "VACUUM;" \; 2>/dev/null
+            log "Optimización de bases de datos completada"
+            ;;
+        5)
+            echo -e "${YELLOW}=== ESTADO DE MEMORIA ===${NC}"
+            adb shell cat /proc/meminfo | grep -E "MemTotal|MemFree|MemAvailable"
+            echo ""
+            adb shell dumpsys meminfo | grep -A10 "Free RAM"
+            ;;
+        6) return ;;
+        *) error "Opción inválida" ;;
+    esac
+}
+
+# Función para optimización de batería
+battery_optimization() {
+    echo -e "${CYAN}=== OPTIMIZACIÓN DE BATERÍA ===${NC}"
+    echo "1. Información detallada de batería"
+    echo "2. Activar modo ahorro de energía"
+    echo "3. Desactivar servicios que consumen batería"
+    echo "4. Listar apps que más batería consumen"
+    echo "5. Reset de estadísticas de batería"
+    echo "6. Volver al menú principal"
+    
+    read -p "Selecciona opción: " bat_option
+    
+    case $bat_option in
+        1)
+            echo -e "${YELLOW}=== INFORMACIÓN DE BATERÍA ===${NC}"
+            adb shell dumpsys battery
+            echo ""
+            # Información adicional - SOLUCIÓN SIMPLE
+            temp=$(adb shell dumpsys battery | grep temperature | awk '{print $2}')
+            if [ -n "$temp" ]; then
+                # Conversión simple sin división
+                echo "Temperatura: ${temp} (valores más altos = más caliente)"
+            fi
+            ;;
+        2)
+            log "Activando modo ahorro de energía..."
+            adb shell settings put global low_power 1
+            adb shell settings put global low_power_sticky 1
+            # Reducir brillo
+            adb shell settings put system screen_brightness 50
+            log "Modo ahorro de energía activado"
+            ;;
+        3)
+            log "Desactivando servicios que consumen batería..."
+            # Desactivar Bluetooth
+            adb shell service call bluetooth_manager 8 > /dev/null 2>&1
+            # Desactivar GPS
+            adb shell settings put secure location_providers_allowed -gps
+            # Desactivar sincronización automática
+            adb shell content insert --uri content://settings/secure --bind name:s:sync_enabled --bind value:i:0
+            log "Servicios desactivados temporalmente"
+            ;;
+        4)
+            echo -e "${YELLOW}=== APPS QUE MÁS BATERÍA CONSUMEN ===${NC}"
+            adb shell dumpsys batterystats --checkin | grep -E "uid|foreground|background" | head -20
+            ;;
+        5)
+            log "Reseteando estadísticas de batería..."
+            adb shell dumpsys batterystats --reset
+            log "Estadísticas de batería reseteadas"
+            ;;
+        6) return ;;
+        *) error "Opción inválida" ;;
+    esac
+}
+
+# Función para cambiar resolución de pantalla - CORREGIDA
+screen_resolution() {
+    echo -e "${CYAN}=== CAMBIO DE RESOLUCIÓN DE PANTALLA ===${NC}"
+    
+    # Obtener resolución actual
+    current_res=$(adb shell wm size | grep -oP "Physical size: \K[0-9]+x[0-9]+")
+    if [ -z "$current_res" ]; then
+        current_res=$(adb shell wm size | cut -d: -f2 | tr -d ' ' | tr -d '\r')
+    fi
+    echo "Resolución actual: $current_res"
+    
+    echo ""
+    echo "1. 720x1280 (HD)"
+    echo "2. 1080x1920 (Full HD)" 
+    echo "3. 1440x2560 (QHD)"
+    echo "4. Resolución personalizada"
+    echo "5. Restaurar resolución por defecto"
+    echo "6. Volver al menú principal"
+    
+    read -p "Selecciona opción: " res_option
+    
+    case $res_option in
+        1)
+            new_res="720x1280"
+            ;;
+        2)
+            new_res="1080x1920"
+            ;;
+        3)
+            new_res="1440x2560"
+            ;;
+        4)
+            read -p "Ingresa resolución (formato: ANCHOxALTO): " new_res
+            if ! echo "$new_res" | grep -qE "^[0-9]+x[0-9]+$"; then
+                error "Formato inválido. Usa: 720x1280"
+                return 1
+            fi
+            ;;
+        5)
+            log "Restaurando resolución por defecto..."
+            adb shell wm size reset
+            sleep 2
+            current_res=$(adb shell wm size | grep -oP "Physical size: \K[0-9]+x[0-9]+")
+            if [ -z "$current_res" ]; then
+                current_res=$(adb shell wm size | cut -d: -f2 | tr -d ' ' | tr -d '\r')
+            fi
+            log "Resolución restaurada: $current_res"
+            return 0
+            ;;
+        6) return ;;
+        *) error "Opción inválida" ; return 1 ;;
+    esac
+    
+    if [ -n "$new_res" ]; then
+        warning "¡Cambiando resolución a: $new_res!"
+        warning "Esto puede afectar la visualización de algunas apps."
+        read -p "¿Continuar? (s/n): " confirm
+        
+        if [ "$confirm" = "s" ]; then
+            log "Cambiando resolución a: $new_res"
+            adb shell wm size "$new_res"
+            sleep 2
+            
+            # Verificar cambio - MÉTODO MEJORADO
+            updated_res=$(adb shell wm size | grep -o "Override size: $new_res")
+            if [ -n "$updated_res" ]; then
+                log "Resolución cambiada exitosamente a: $new_res"
+                echo -e "${GREEN}¡Resolución cambiada correctamente!${NC}"
+            else
+                # Verificar de otra manera
+                current_override=$(adb shell wm size | grep "Override" | grep -oP "[0-9]+x[0-9]+")
+                if [ "$current_override" = "$new_res" ]; then
+                    log "Resolución cambiada exitosamente a: $new_res"
+                    echo -e "${GREEN}¡Resolución cambiada correctamente!${NC}"
+                else
+                    warning "La resolución se cambió, pero la verificación puede no ser precisa."
+                    warning "Verifica manualmente en tu dispositivo."
+                    log "Resolución configurada: $new_res (verificación limitada)"
+                fi
+            fi
+        else
+            log "Operación cancelada"
+        fi
+    fi
+}
+
+# Función forzada para abrir aplicaciones
+force_open_app() {
+    local package="$1"
+    local activity="$2"
+    
+    log "Forzando apertura de $package/$activity"
+    
+    # Detener la aplicación primero
+    adb shell am force-stop "$package" 2>/dev/null
+    
+    # Intentar abrir con am start
+    if [ -n "$activity" ]; then
+        adb shell am start -n "$package/$activity" --activity-clear-task --activity-clear-top
+    else
+        adb shell monkey -p "$package" -c android.intent.category.LAUNCHER 1
+    fi
+    
+    sleep 2
+}
+
+# Función para obtener información del dispositivo
+get_device_info() {
+    echo -e "${CYAN}=== INFORMACIÓN DEL DISPOSITIVO ===${NC}"
+    model=$(adb shell getprop ro.product.model)
+    android_version=$(adb shell getprop ro.build.version.release)
+    battery_level=$(adb shell dumpsys battery | grep level | awk '{print $2}')
+    storage_free=$(adb shell df /storage/emulated/0 | tail -1 | awk '{print $4}')
+    resolution=$(adb shell wm size | cut -d: -f2 | tr -d ' ' | tr -d '\r')
+    density=$(adb shell wm density | cut -d: -f2 | tr -d ' ' | tr -d '\r')
+    
+    echo "Modelo: $model"
+    echo "Android: $android_version"
+    echo "Batería: $battery_level"
+    echo "Almacenamiento libre: $storage_free"
+    echo "Resolución: $resolution"
+    echo "Densidad: $density dpi"
+    echo "Carpeta Screenshots: $SCREENSHOT_DIR"
+    echo "Carpeta Recordings: $SCREENRECORD_DIR"
+    echo ""
+}
+
+# Función para gestión de aplicaciones
+app_management() {
+    echo -e "${CYAN}=== GESTIÓN DE APLICACIONES ===${NC}"
+    echo "1. Listar todas las aplicaciones"
+    echo "2. Listar aplicaciones de usuario"
+    echo "3. Forzar apertura de aplicación"
+    echo "4. Desinstalar aplicación"
+    echo "5. Forzar detención de aplicación"
+    echo "6. Limpiar datos de aplicación"
+    echo "7. Volver al menú principal"
+    
+    read -p "Selecciona opción: " app_option
+    
+    case $app_option in
+        1)
+            log "Listando todas las aplicaciones..."
+            adb shell pm list packages | sed 's/package://g'
+            ;;
+        2)
+            log "Listando aplicaciones de usuario..."
+            adb shell pm list packages -3 | sed 's/package://g'
+            ;;
+        3)
+            echo -e "${YELLOW}Aplicaciones comunes:"
+            echo "com.android.chrome - Chrome"
+            echo "com.sec.android.app.camera - Cámara Samsung"
+            echo "com.android.settings - Ajustes"
+            echo "com.whatsapp - WhatsApp"
+            echo "com.instagram.android - Instagram${NC}"
+            echo ""
+            read -p "Nombre del paquete a abrir: " package
+            read -p "Actividad (opcional, Enter para omitir): " activity
+            
+            force_open_app "$package" "$activity"
+            log "Aplicación $package forzada a abrir"
+            ;;
+        4)
+            read -p "Nombre del paquete a desinstalar: " package
+            warning "¡Esto desinstalará la aplicación permanentemente!"
+            read -p "¿Continuar? (s/n): " confirm
+            if [ "$confirm" = "s" ]; then
+                adb uninstall "$package"
+                log "Aplicación $package desinstalada"
+            fi
+            ;;
+        5)
+            read -p "Nombre del paquete a detener: " package
+            adb shell am force-stop "$package"
+            log "Aplicación $package forzada a detener"
+            ;;
+        6)
+            read -p "Nombre del paquete a limpiar: " package
+            adb shell pm clear "$package"
+            log "Datos de $package limpiados"
+            ;;
+        7) return ;;
+        *) error "Opción inválida" ;;
+    esac
+}
+
+# Función MEJORADA para capturas y multimedia - GUARDA EN TELÉFONO
+media_functions() {
+    echo -e "${PURPLE}=== MULTIMEDIA MEJORADO ===${NC}"
+    echo "1. Capturar pantalla (guarda en teléfono)"
+    echo "2. Capturar pantalla en bucle (guarda en teléfono)"
+    echo "3. Grabar pantalla (guarda en teléfono)"
+    echo "4. Forzar apertura de cámara"
+    echo "5. Tomar foto con comando forzado"
+    echo "6. Reproducir video en el dispositivo"
+    echo "7. Listar archivos capturados"
+    echo "8. Volver al menú principal"
+    
+    read -p "Selecciona opción: " media_option
+    
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    
+    case $media_option in
+        1)
+            filename="$SCREENSHOT_DIR/screenshot_$timestamp.png"
+            if screenshot "$filename"; then
+                log "Captura guardada en TELÉFONO: $filename"
+                echo -e "${GREEN}¡Captura exitosa!${NC}"
+                echo -e "Ruta en teléfono: ${YELLOW}$filename${NC}"
+            else
+                error "Fallo en captura de pantalla"
+            fi
+            ;;
+        2)
+            read -p "Número de capturas: " count
+            read -p "Intervalo en segundos: " interval
+            log "Iniciando captura en bucle: $count capturas cada ${interval}s"
+            
+            for i in $(seq 1 $count); do
+                filename="$SCREENSHOT_DIR/screenshot_${timestamp}_${i}.png"
+                if screenshot "$filename"; then
+                    echo "Captura $i/$count guardada en: $filename"
+                else
+                    error "Fallo en captura $i"
+                fi
+                sleep "$interval"
+            done
+            ;;
+        3)
+            # Crear directorio de recordings si no existe
+            adb shell mkdir -p "$SCREENRECORD_DIR" 2>/dev/null
+            
+            filename="$SCREENRECORD_DIR/screenrecord_$timestamp.mp4"
+            log "Iniciando grabación de 10 segundos..."
+            echo -e "Guardando en: ${YELLOW}$filename${NC}"
+            
+            # Grabar directamente en el teléfono
+            adb shell screenrecord --verbose --time-limit 10 "$filename" &
+            local record_pid=$!
+            
+            # Mostrar progreso
+            for i in {1..10}; do
+                echo -n "."
+                sleep 1
+            done
+            echo ""
+            
+            wait $record_pid
+            sleep 2
+            
+            # Verificar que el archivo se creó
+            if adb shell "[ -f \"$filename\" ]" 2>/dev/null; then
+                log "Grabación guardada en TELÉFONO: $filename"
+                echo -e "${GREEN}¡Grabación exitosa!${NC}"
+                echo -e "Ruta en teléfono: ${YELLOW}$filename${NC}"
+            else
+                error "Fallo en la grabación"
+            fi
+            ;;
+        4)
+            log "Forzando apertura de cámara..."
+            # Intentar con diferentes paquetes de cámara
+            adb shell am force-stop com.sec.android.app.camera
+            adb shell am start -n com.sec.android.app.camera/.Camera --activity-clear-task
+            sleep 1
+            ;;
+        5)
+            log "Forzando toma de foto..."
+            # Abrir cámara y simular botón de captura
+            adb shell am start -n com.sec.android.app.camera/.Camera
+            sleep 2
+            # Simular presión del botón de volumen para captura (depende del dispositivo)
+            adb shell input keyevent KEYCODE_VOLUME_DOWN
+            sleep 1
+            log "Foto tomada (revisa la galería)"
+            ;;
+        6)
+            read -p "Ruta del video en el dispositivo (ej: /storage/emulated/0/Movies/video.mp4): " video_path
+            log "Reproduciendo video..."
+            adb shell am start -a android.intent.action.VIEW -d "file://$video_path" -t "video/*"
+            ;;
+        7)
+            echo -e "${CYAN}=== ARCHIVOS CAPTURADOS ===${NC}"
+            echo "Screenshots:"
+            adb shell ls -la "$SCREENSHOT_DIR" 2>/dev/null || echo "No hay screenshots"
+            echo ""
+            echo "Recordings:"
+            adb shell ls -la "$SCREENRECORD_DIR" 2>/dev/null || echo "No hay recordings"
+            ;;
+        8) return ;;
+        *) error "Opción inválida" ;;
+    esac
+}
+
+# Función para sistema y hardware
+system_functions() {
+    echo -e "${CYAN}=== SISTEMA Y HARDWARE ===${NC}"
+    echo "1. Información de memoria"
+    echo "2. Uso de CPU"
+    echo "3. Información de batería"
+    echo "4. Sensores disponibles"
+    echo "5. Espacio en almacenamiento"
+    echo "6. Cerrar aplicaciones"
+    echo "7. Reiniciar dispositivo"
+    echo "8. Volver al menú principal"
+    
+    read -p "Selecciona opción: " sys_option
+    
+    case $sys_option in
+        1)
+            adb shell cat /proc/meminfo | head -10
+            ;;
+        2)
+            adb shell top -n 1 | head -20
+            ;;
+        3)
+            adb shell dumpsys battery
+            ;;
+        4)
+            adb shell pm list features | grep -i sensor
+            ;;
+        5)
+            adb shell df -h | grep -E '/storage/emulated/0'
+            ;;
+        6)
+            echo -e "${CYAN}=== CERRAR APLICACIONES ===${NC}"
+            echo "1. Cerrar solo apps de usuario (recomendado)"
+            echo "2. Cierre agresivo (puede afectar sistema)"
+            echo "3. Volver"
+            
+            read -p "Selecciona opción: " kill_option
+            
+            case $kill_option in
+                1)
+                    warning "Cerrando aplicaciones de usuario..."
+                    count=0
+                    adb shell "pm list packages -3" | sed 's/package://g' | while read app; do
+                        if adb shell am force-stop "$app" 2>/dev/null; then
+                            echo "✓ $app"
+                            count=$((count + 1))
+                        fi
+                    done
+                    log "Cerradas $count aplicaciones de usuario"
+                    ;;
+                2)
+                    warning "¡Cierre agresivo de todas las aplicaciones!"
+                    warning "Esto puede afectar temporalmente el sistema."
+                    read -p "¿Continuar? (s/n): " confirm
+                    if [ "$confirm" = "s" ]; then
+                        # Cerrar apps de usuario
+                        adb shell "pm list packages -3" | sed 's/package://g' | while read app; do
+                            adb shell am force-stop "$app" 2>/dev/null
+                        done
+                        
+                        # Kill-all para procesos
+                        adb shell am kill-all 2>/dev/null
+                        
+                        # Limpiar memoria
+                        adb shell "echo 3 > /proc/sys/vm/drop_caches" 2>/dev/null
+                        
+                        log "Cierre agresivo completado"
+                        echo -e "${GREEN}¡Cierre agresivo completado!${NC}"
+                    else
+                        log "Cierre agresivo cancelado"
+                    fi
+                    ;;
+                3) return ;;
+                *) error "Opción inválida" ;;
+            esac
+            ;;
+        7)
+            warning "¡El dispositivo se reiniciará!"
+            read -p "¿Continuar? (s/n): " confirm
+            if [ "$confirm" = "s" ]; then
+                adb reboot
+                log "Dispositivo reiniciándose..."
+            fi
+            ;;
+        8) return ;;
+        *) error "Opción inválida" ;;
+    esac
+}
+
+# Función para comandos ADB personalizados
+custom_commands() {
+    echo -e "${BLUE}=== COMANDOS PERSONALIZADOS ===${NC}"
+    echo "1. Ejecutar comando ADB personalizado"
+    echo "2. Ejecutar comando shell personalizado"
+    echo "3. Ver logs del sistema en tiempo real"
+    echo "4. Inyectar input táctil"
+    echo "5. Inyectar texto"
+    echo "6. Navegar por archivos del teléfono"
+    echo "7. Volver al menú principal"
+    
+    read -p "Selecciona opción: " custom_option
+    
+    case $custom_option in
+        1)
+            read -p "Comando ADB: " cmd
+            adb $cmd
+            ;;
+        2)
+            read -p "Comando Shell: " cmd
+            adb shell $cmd
+            ;;
+        3)
+            echo "Mostrando logs (Ctrl+C para detener)..."
+            adb logcat -c
+            adb logcat
+            ;;
+        4)
+            read -p "Coordenada X: " x
+            read -p "Coordenada Y: " y
+            adb shell input tap $x $y
+            log "Input táctil inyectado en ($x, $y)"
+            ;;
+        5)
+            read -p "Texto a inyectar: " text
+            adb shell input text "$text"
+            log "Texto inyectado: $text"
+            ;;
+        6)
+            echo -e "${CYAN}=== EXPLORADOR DE ARCHIVOS ===${NC}"
+            read -p "Ruta a listar (ej: /storage/emulated/0/): " path
+            adb shell ls -la "$path"
+            ;;
+        7) return ;;
+        *) error "Opción inválida" ;;
+    esac
+}
+
+# Función para mostrar información del sistema
+show_system_info() {
+    echo -e "${CYAN}=== Rutas y Informacion ===${NC}"
+    echo "Directorio de trabajo: $(pwd)"
+    echo "Usuario: $(whoami)"
+    echo "Log file: $LOG_FILE"
+    echo ""
+}
+
+# Función para mostrar ayuda de instalación
+show_install_help() {
+    echo -e "${YELLOW}=== AYUDA DE INSTALACIÓN ===${NC}"
+    case "$OS" in
+        "Linux")
+            echo "Para instalar ADBCTL globalmente:"
+            echo "  chmod +x adbctl"
+            echo "  sudo mv adbctl /usr/local/bin/"
+            echo "Luego ejecuta desde cualquier lugar: adbctl"
+            ;;
+        "macOS")
+            echo "Para instalar ADBCTL globalmente:"
+            echo "  chmod +x adbctl"
+            echo "  sudo mv adbctl /usr/local/bin/"
+            echo "Luego ejecuta desde cualquier lugar: adbctl"
+            ;;
+        "Windows")
+            echo "Para usar ADBCTL en Windows:"
+            echo "  1. Asegúrate de tener Git Bash o WSL instalado"
+            echo "  2. Ejecuta desde Git Bash: ./adbctl"
+            echo "  3. O crea un archivo adbctl.bat con el contenido:"
+            echo "     @echo off"
+            echo "     bash adbctl"
+            echo "     pause"
+            ;;
+    esac
+    echo ""
+}
+
+# Menú principal
+main_menu() {
+    while true; do
+        echo -e "${CYAN}
+╔═══════════════════════════════════════╗
+║         ¡Bienvenido a ADBCTL!         ║
+║    (Android Debug Bridge Control)     ║
+╚═══════════════════════════════════════╝${NC}"
+        
+        show_system_info
+        
+        echo -e "${GREEN}1.${NC} Información del dispositivo"
+        echo -e "${GREEN}2.${NC} Gestión de aplicaciones"
+        echo -e "${GREEN}3.${NC} Multimedia (guarda en teléfono)"
+        echo -e "${GREEN}4.${NC} Sistema y hardware"
+        echo -e "${GREEN}5.${NC} Comandos personalizados"
+        echo -e "${GREEN}6.${NC} Optimización del dispositivo"
+        echo -e "${GREEN}7.${NC} Optimización de batería"
+        echo -e "${GREEN}8.${NC} Cambiar resolución de pantalla"
+        echo -e "${GREEN}9.${NC} Ver archivo de log"
+        echo -e "${BLUE}i.${NC} Ayuda de instalación"
+        echo -e "${RED}0.${NC} Salir"
+        echo ""
+        
+        read -p "Selecciona una opción: " main_option
+        
+        case $main_option in
+            1) get_device_info ;;
+            2) app_management ;;
+            3) media_functions ;;
+            4) system_functions ;;
+            5) custom_commands ;;
+            6) device_optimization ;;
+            7) battery_optimization ;;
+            8) screen_resolution ;;
+            9) 
+                echo -e "${YELLOW}=== ÚLTIMAS ENTRADAS DEL LOG ===${NC}"
+                tail -20 "$LOG_FILE"
+                echo ""
+                ;;
+            i|I) show_install_help ;;
+            0)
+                log "Sesión terminada"
+                echo -e "${GREEN}¡Hasta luego!${NC}"
+
+                exit 0
+                ;;
+            *)
+                error "Opción inválida"
+                ;;
+        esac
+        
+        echo ""
+        read -p "Presiona Enter para continuar..."
+        clear
+    done
+}
+
+# Inicialización
+clear
+
+echo -e "${GREEN}Iniciando ADBCTL en $OS...${NC}"
+log "=== INICIO DE SESIÓN ==="
+
+# Crear directorios en el teléfono al iniciar
+adb shell mkdir -p "$SCREENSHOT_DIR" 2>/dev/null
+adb shell mkdir -p "$SCREENRECORD_DIR" 2>/dev/null
+
+if check_adb; then
+    echo -e "${GREEN}✓ ADB encontrado y dispositivo conectado${NC}"
+    get_device_info
+    main_menu
+else
+    error "No se pudo conectar al dispositivo. Saliendo..."
+    echo ""
+    show_install_help
+    exit 1
+fi
